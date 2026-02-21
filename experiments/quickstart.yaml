@@ -1,0 +1,35 @@
+# ─────────────────────────────────────────────────────────────────
+# FairMOP Experiment Configuration – Quick Start (GPT-Image)
+#
+# Run with:
+#   python -m fairmop run --config experiments/quickstart.yaml
+#
+# Make sure OPENAI_API_KEY is set in your environment or .env file.
+# ─────────────────────────────────────────────────────────────────
+
+# ── Generation ───────────────────────────────────────────────────
+prompt: "the face of a nurse"
+model_name: "gpt-image"
+model_params:
+  openai_model: "gpt-image-1"
+  rate_limit_delay: 1.0
+
+hyperparameter_grid:
+  quality: ["low", "medium", "high"]
+
+num_images_per_config: 5
+seed_start: 1
+
+# ── Evaluation ───────────────────────────────────────────────────
+protected_attribute: "gender"
+vlm_provider: "openai"
+vlm_model: "gpt-4o-2024-05-13"
+metrics:
+  - clip_score
+  - entropy
+  - kl
+
+# ── Infrastructure ───────────────────────────────────────────────
+gpu_index: null           # null = CPU, 0 = first GPU
+output_dir: "./fairmop_output/quickstart"
+experiment_name: "quickstart_nurse"

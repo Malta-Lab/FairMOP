@@ -1,0 +1,39 @@
+# FairMOP
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+
+# Output
+fairmop_output/
+*.npy
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Generated images (large files)
+# Uncomment if you don't want to track generated images:
+# fairmop_output/images/

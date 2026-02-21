@@ -1,0 +1,43 @@
+# ─────────────────────────────────────────────────────────────────
+# FairMOP – Custom Local Model Experiment Template
+#
+# Template for running experiments with locally-hosted models
+# (e.g., Stable Diffusion, SDXL, FLUX).
+#
+# Before running:
+#   1. Implement your generator in fairmop/generation/custom.py
+#   2. Register it with @GeneratorRegistry.register("your-model-name")
+#   3. Update model_name below to match
+#
+# Run with:
+#   python -m fairmop run --config experiments/custom_model.yaml
+# ─────────────────────────────────────────────────────────────────
+
+prompt: "the face of a nurse"
+
+# Change this to your registered model name
+model_name: "my-custom-model"
+model_params: {}
+
+# ── Hyperparameter Grid ──────────────────────────────────────────
+# Customize these for your specific model
+hyperparameter_grid:
+  guidance_scale: [0.0, 3.5, 7.0, 10.0, 15.0]
+  num_inference_steps: [20, 50]
+
+num_images_per_config: 100
+seed_start: 1
+
+# ── Evaluation ───────────────────────────────────────────────────
+protected_attribute: "gender"
+vlm_provider: "openai"
+vlm_model: "gpt-4o-2024-05-13"
+metrics:
+  - clip_score
+  - entropy
+  - kl
+
+# ── Infrastructure ───────────────────────────────────────────────
+gpu_index: 0                # Use first GPU for local models
+output_dir: "./fairmop_output/custom_experiment"
+experiment_name: "custom_model_benchmark"

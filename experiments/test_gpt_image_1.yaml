@@ -1,0 +1,24 @@
+# experiments/meu_experimento.yaml
+
+prompt: "the face of a nurse"
+model_name: "gpt-image"
+model_params:
+  openai_model: "gpt-image-1"
+  rate_limit_delay: 1.0
+
+# ↓↓↓ AQUI: cada lista gera o produto cartesiano ↓↓↓
+hyperparameter_grid:
+  quality: ["low", "medium", "high"]
+  size: ["1024x1024", "1536x1024"]
+# → 3 × 2 = 6 configurações
+
+# ↓↓↓ Quantidade de imagens POR configuração ↓↓↓
+num_images_per_config: 5    # 6 × 5 = 30 imagens total
+
+seed_start: 1
+protected_attribute: "gender"
+vlm_provider: "openai"
+vlm_model: "gpt-4o-2024-05-13"
+metrics: [clip_score, entropy, kl]
+output_dir: "./fairmop_output/meu_teste"
+experiment_name: "nurse_pareto_test"
