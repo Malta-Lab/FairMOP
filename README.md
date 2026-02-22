@@ -11,7 +11,7 @@ FairMOP is a modular, model-agnostic Python framework for evaluating fairness an
 | Module | Responsibility |
 |---|---|
 | **Input Specifications** | Prompt templates, hyperparameter grids, protected attributes |
-| **Generation** | Pluggable T2I backends (GPT-Image built-in; SD, SDXL, FLUX via plugins) |
+| **Generation** | Select any T2I model to evaluate — GPT-Image-1 included as example; bring your own (SD, SDXL, FLUX, or any custom model) |
 | **Evaluation** | VLM-as-a-Judge demographic annotation + utility/fairness metrics |
 | **Output** | Pareto frontier identification, interactive Streamlit dashboard, JSON/CSV export |
 
