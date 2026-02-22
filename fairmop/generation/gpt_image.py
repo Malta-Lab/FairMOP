@@ -26,10 +26,10 @@ from fairmop.generation.registry import GeneratorRegistry
 
 @GeneratorRegistry.register("gpt-image")
 class GPTImageGenerator(BaseGenerator):
-"""Generator backend for OpenAI's GPT-Image model.
+    """Generator backend for OpenAI's GPT-Image model.
 
     Parameters:
-        model_name: Model identifier (default: ``"gpt-image"``).        
+        model_name: Model identifier (default: ``"gpt-image"``).
         device: Ignored for API-based generators.
         api_key: OpenAI API key. Falls back to ``OPENAI_API_KEY`` env var.
         openai_model: Actual OpenAI model name (``"gpt-image-1"``).

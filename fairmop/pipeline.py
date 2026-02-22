@@ -220,8 +220,9 @@ class FairMOPPipeline:
                 print("[Pipeline] CLIP model loaded (ViT-L-14, open_clip)")
             except ImportError:
                 print(
-                    "[Pipeline] WARNING: open_clip not available, skipping clip_score"
-                )  # noqa: E501
+                    "[Pipeline] WARNING: open_clip not available, "
+                    "skipping clip_score"
+                )
                 needs_clip = False
 
         total_configs = len(config_groups)

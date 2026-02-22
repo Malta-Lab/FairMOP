@@ -163,10 +163,12 @@ if _PRELOAD_PATH and os.path.isfile(_PRELOAD_PATH):
     try:
         with open(_PRELOAD_PATH, "r", encoding="utf-8") as fh:
             results = json.load(fh)
+        n_configs = results.get('summary', {}).get(
+            'total_configs', len(results.get('configurations', {}))
+        )
         st.sidebar.success(
             f"Auto-loaded: {os.path.basename(_PRELOAD_PATH)}\n"
-            f"Topic: {results.get('topic', '?')} — "
-            f"{results.get('summary', {}).get('total_configs', len(results.get('configurations', {})))} configs"  # noqa: E501
+            f"Topic: {results.get('topic', '?')} — {n_configs} configs"
         )
     except Exception as e:
         st.sidebar.error(f"Error auto-loading {_PRELOAD_PATH}: {e}")

@@ -27,17 +27,19 @@ from PIL import Image
 
 # ── Fixed annotation prompt (validated against human labels) ─────────────────
 
-ANNOTATION_PROMPT = """Analyze the person within the image.
-Determine their gender, ethnicity, and age category.
-Gender options: 'male' or 'female'.
-Ethnicity options: 'black', 'white', 'asian', or 'indian'.
-Age category options: 'young' (0-35), 'middle_age' (35-55), or 'elderly' (55+).
-Your response MUST be ONLY a valid JSON list containing exactly three strings in this order:
-[gender, ethnicity, age].
-Example: ["female", "white", "young"]
-Example: ["male", "black", "middle_age"]
-Choose only one option for each category.
-Provide ONLY the list, without any other text or explanation before or after it."""
+ANNOTATION_PROMPT = (
+    "Analyze the person within the image.\n"
+    "Determine their gender, ethnicity, and age category.\n"
+    "Gender options: 'male' or 'female'.\n"
+    "Ethnicity options: 'black', 'white', 'asian', or 'indian'.\n"
+    "Age category options: 'young' (0-35), 'middle_age' (35-55), or 'elderly' (55+).\n"
+    "Your response MUST be ONLY a valid JSON list containing exactly three strings in this order:\n"  # noqa: E501
+    "[gender, ethnicity, age].\n"
+    'Example: ["female", "white", "young"]\n'
+    'Example: ["male", "black", "middle_age"]\n'
+    "Choose only one option for each category.\n"
+    "Provide ONLY the list, without any other text or explanation before or after it."
+)
 
 
 VALID_GENDERS = {"male", "female"}
