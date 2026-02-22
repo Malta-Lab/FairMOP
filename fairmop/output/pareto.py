@@ -24,9 +24,7 @@ Algorithm (from the FairMOP methodology):
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple
-
-import numpy as np
+from typing import Any, Dict, List, Tuple
 
 
 @dataclass
@@ -76,7 +74,7 @@ class ParetoResult:
 
     def summary(self) -> str:
         lines = [
-            f"Pareto Analysis Summary",
+            "Pareto Analysis Summary",
             f"  Total configurations : {self.n_configurations}",
             f"  Pareto-optimal       : {self.n_pareto}",
             f"  Utility metric       : {self.utility_metric_name}",

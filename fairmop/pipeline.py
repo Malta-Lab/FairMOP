@@ -14,11 +14,9 @@ This is the main entry point for running a complete FairMOP experiment.
 from __future__ import annotations
 
 import glob
-import json
 import os
 import re
 import time
-from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from dotenv import load_dotenv
@@ -28,10 +26,13 @@ from fairmop.evaluation.fairness import compute_fairness_metrics
 from fairmop.evaluation.vlm_judge import VLMJudge
 
 load_dotenv()  # Load .env file (OPENAI_API_KEY, etc.)
-from fairmop.generation.registry import GeneratorRegistry
-from fairmop.input_specs import print_experiment_summary, validate_or_raise
-from fairmop.output.export import export_results_csv, export_results_json
-from fairmop.output.pareto import build_pareto_from_results
+from fairmop.generation.registry import GeneratorRegistry  # noqa: E402
+from fairmop.input_specs import (  # noqa: E402
+    print_experiment_summary,
+    validate_or_raise,
+)
+from fairmop.output.export import export_results_csv, export_results_json  # noqa: E402
+from fairmop.output.pareto import build_pareto_from_results  # noqa: E402
 
 
 class FairMOPPipeline:
@@ -147,7 +148,9 @@ class FairMOPPipeline:
 
                 except Exception as e:
                     generated_count += 1  # count to keep progress accurate
-                    print(f"  [{generated_count}/{total_images}] Seed {seed} ✗ ERROR: {e}")
+                    print(
+                        f"  [{generated_count}/{total_images}] Seed {seed} ERROR: {e}"
+                    )
                     continue
 
         self.generator.teardown()
@@ -214,7 +217,7 @@ class FairMOPPipeline:
                 )
                 print("[Pipeline] CLIP model loaded (ViT-L-14, open_clip)")
             except ImportError:
-                print("[Pipeline] WARNING: open_clip not available, skipping clip_score")
+                print("[Pipeline] WARNING: open_clip not available, skipping clip_score")  # noqa: E501
                 needs_clip = False
 
         total_configs = len(config_groups)
@@ -398,7 +401,7 @@ class FairMOPPipeline:
 
         elapsed = time.time() - self._start_time if self._start_time else 0
         print(f"\n{'=' * 60}")
-        print(f"  FairMOP Pipeline Complete!")
+        print("  FairMOP Pipeline Complete!")
         print(f"  Elapsed time: {elapsed:.1f}s")
         print(f"  Output directory: {self.config.output_dir}")
         print(f"{'=' * 60}\n")

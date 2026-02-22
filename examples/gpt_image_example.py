@@ -23,8 +23,8 @@ def main():
         # ── Model ────────────────────────────────────────────────────
         model_name="gpt-image",
         model_params={
-            "openai_model": "gpt-image-1",  # or "dall-e-3"
-            "rate_limit_delay": 1.0,  # seconds between API calls
+            "openai_model": "gpt-image-1",
+            "rate_limit_delay": 1.0,
         },
         # ── Hyperparameter Grid ──────────────────────────────────────
         # Each combination defines one configuration
@@ -51,7 +51,7 @@ def main():
     n = len(config.hyperparameter_grid)
     print(f"\nConfigurations: {n}")
     print(f"Total images: {config.total_images()}")
-    print(f"Grid:")
+    print("Grid:")
     for i, cfg in enumerate(config.hyperparameter_grid.configurations()):
         print(f"  [{i + 1}] {cfg}")
 

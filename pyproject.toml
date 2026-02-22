@@ -10,7 +10,9 @@ readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.9"
 authors = [
-    {name = "FairMOP Team"},
+    {name = "Marco Nemetz Bochernitsan"},
+    {name = "Lucas Silveira Kupssinsku"},
+    {name = "Rodrigo Coelho Barros"},
 ]
 keywords = [
     "fairness",
@@ -96,6 +98,12 @@ all = [
 [project.urls]
 Homepage = "https://github.com/Malta-Lab/FairMOP"
 Repository = "https://github.com/Malta-Lab/FairMOP"
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
 
 [project.scripts]
 fairmop = "fairmop.__main__:main"

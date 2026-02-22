@@ -12,7 +12,7 @@ import csv
 import json
 import os
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 
 def export_results_json(

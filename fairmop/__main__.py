@@ -9,7 +9,7 @@ Supports four modes:
         python -m fairmop dashboard
 
     3. Evaluate pre-existing images:
-        python -m fairmop evaluate --images ./generated_images --metrics clip_score entropy
+        python -m fairmop evaluate --images ./images --metrics clip_score entropy
 
     4. Download FairMOP pre-generated dataset from HuggingFace Hub:
         python -m fairmop download --output ./my_images/
@@ -200,7 +200,9 @@ def _list_models(repo_id: str, token: str | None) -> list[str]:
         )
         raise SystemExit(1)
 
-    resolved_token = token or os.environ.get("HF_TOKEN") or os.environ.get("HUGGINGFACE_TOKEN")
+    resolved_token = (
+        token or os.environ.get("HF_TOKEN") or os.environ.get("HUGGINGFACE_TOKEN")
+    )
     files = list_repo_files(repo_id, repo_type="dataset", token=resolved_token)
     return sorted(set(f.split("/")[0] for f in files if "/" in f))
 
@@ -247,7 +249,9 @@ def _run_download(
         raise SystemExit(1)
 
     # Prefer explicit token → env var → cached login (no interactive prompt)
-    resolved_token = token or os.environ.get("HF_TOKEN") or os.environ.get("HUGGINGFACE_TOKEN")
+    resolved_token = (
+        token or os.environ.get("HF_TOKEN") or os.environ.get("HUGGINGFACE_TOKEN")
+    )
 
     # ── --list-models: just print available folders and exit ────────────
     if list_models:
@@ -258,7 +262,7 @@ def _run_download(
             print(f"  {m}")
         print(
             "\nUsage example:\n"
-            f"  python -m fairmop download --model sd"
+            "  python -m fairmop download --model sd"
         )
         return
 
@@ -323,7 +327,7 @@ def _run_download(
     # Clean up staging dir
     shutil.rmtree(staging_dir, ignore_errors=True)
 
-    print(f"\n[FairMOP] Download complete.")
+    print("\n[FairMOP] Download complete.")
 
     # ── Print ready-to-use evaluate commands ────────────────────────────
     if evaluation_dirs:

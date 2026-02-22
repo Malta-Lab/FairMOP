@@ -12,7 +12,6 @@ Usage:
 """
 
 import os
-import sys
 
 from fairmop.output.export import load_results_json
 from fairmop.output.pareto import build_pareto_from_results, compute_hypervolume

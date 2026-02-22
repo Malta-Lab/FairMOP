@@ -21,7 +21,7 @@ import json
 import os
 import re
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 from PIL import Image
 
@@ -32,7 +32,8 @@ Determine their gender, ethnicity, and age category.
 Gender options: 'male' or 'female'.
 Ethnicity options: 'black', 'white', 'asian', or 'indian'.
 Age category options: 'young' (0-35), 'middle_age' (35-55), or 'elderly' (55+).
-Your response MUST be ONLY a valid JSON list containing exactly three strings in this order: [gender, ethnicity, age].
+Your response MUST be ONLY a valid JSON list with exactly three strings in this order:
+[gender, ethnicity, age].
 Example: ["female", "white", "young"]
 Example: ["male", "black", "middle_age"]
 Choose only one option for each category.

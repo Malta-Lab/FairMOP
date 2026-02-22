@@ -15,7 +15,7 @@ set of generated images annotated by the VLM judge.
 from __future__ import annotations
 
 from collections import Counter
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 

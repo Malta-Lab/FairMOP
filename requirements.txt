@@ -1,6 +1,7 @@
 # ─────────────────────────────────────────────────────────────────
 # FairMOP – Core Dependencies
 # ─────────────────────────────────────────────────────────────────
+ruff>=0.4.0
 numpy>=1.24.0
 Pillow>=9.0.0
 tqdm>=4.64.0
@@ -14,8 +15,8 @@ requests>=2.28.0
 torch>=2.0.0
 torchvision>=0.15.0
 scipy>=1.10.0
-# CLIP Score (install from GitHub)
-# pip install git+https://github.com/openai/CLIP.git
+# CLIP Score (open_clip_torch – compatible with OpenAI ViT-L/14 weights)
+open_clip_torch>=2.24.0
 # FID (Clean-FID)
 clean-fid>=0.1.35
 # PRDC

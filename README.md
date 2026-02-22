@@ -5,7 +5,7 @@
 FairMOP is a modular, model-agnostic Python framework for evaluating fairness and quality in text-to-image (T2I) generative models. It frames the evaluation as a **multi-objective optimization problem (MOOP)**, automatically identifying Pareto-optimal configurations in the fairness–utility space.
 
 ---
-
+![FairMOP Modules](docs/pdf_image_modules.svg)
 ## Overview
 
 | Module | Responsibility |
@@ -21,7 +21,7 @@ FairMOP is a modular, model-agnostic Python framework for evaluating fairness an
 |---|---|---|
 | Utility | CLIP Score | Cosine similarity between text prompt and image (ViT-L/14) |
 | Utility | FID | Fréchet Inception Distance (Clean-FID + InceptionV3) |
-| Utility | PRDC Precision | k-NN Precision (k=5) |
+| Utility | PRDC Precision | Manifold-based realism metric (k-NN, k=5) |
 | Fairness | Shannon Entropy | Normalized entropy of demographic distribution (1.0 = uniform) |
 | Fairness | KL Divergence | KL divergence from the uniform distribution |
 
@@ -29,46 +29,45 @@ FairMOP is a modular, model-agnostic Python framework for evaluating fairness an
 
 ## Installation
 
-### Basic install (CPU, API-only models)
-
 ```bash
 git clone https://github.com/Malta-Lab/FairMOP.git
 cd FairMOP
+pip install -r requirements.txt
 pip install -e .
-```
-
-### Full install (all extras)
-
-```bash
-pip install -e ".[all]"
-pip install git+https://github.com/openai/CLIP.git   # CLIP Score requires this
-```
-
-### Selective extras
-
-```bash
-pip install -e ".[openai]"          # GPT-Image / GPT-4o annotation
-pip install -e ".[gemini]"          # Gemini annotation backend
-pip install -e ".[clip]"            # CLIP Score (PyTorch + CLIP)
-pip install -e ".[fid]"             # FID (Clean-FID)
-pip install -e ".[prdc]"            # PRDC Precision
-pip install -e ".[dashboard]"       # Streamlit + Plotly dashboard
 ```
 
 ### Environment variables
 
 ```bash
-export OPENAI_API_KEY="sk-..."      # Required for GPT-Image generation & OpenAI VLM judge
-export GOOGLE_API_KEY="AIza..."     # Required only for Gemini VLM judge
+export OPENAI_API_KEY="sk-..."      # GPT-Image generation & OpenAI VLM judge
+export GOOGLE_API_KEY="AIza..."     # Gemini VLM judge only
 ```
 
 You can also place these in a `.env` file at the project root.
 
 ---
 
-## Quick Start
+## Running the Full Pipeline
 
-### Option A – Python API
+The pipeline has four sequential modules. You can run all of them end-to-end or
+skip any module depending on what you already have.
+
+### Module flow
+
+```
+[1] Input Specs  →  [2] Generation  →  [3] Evaluation  →  [4] Output
+     config              generate          VLM judge         Pareto frontier
+     prompts             per grid point    CLIP / FID        JSON/CSV export
+     grid                save .png         Entropy / KL      Dashboard
+```
+
+### Option A – Full end-to-end via YAML
+
+```bash
+python -m fairmop run --config experiments/quickstart.yaml
+```
+
+### Option B – Full end-to-end via Python API
 
 ```python
 from fairmop import ExperimentConfig, FairMOPPipeline
@@ -79,7 +78,7 @@ config = quick_config(
     model_name="gpt-image",
     grid_params={"quality": ["low", "medium", "high"]},
     num_images=5,
-    metrics=["clip_score", "entropy"],
+    metrics=["clip_score", "entropy", "kl"],
     output_dir="./fairmop_output/quickstart",
     experiment_name="quickstart_nurse",
     vlm_provider="openai",
@@ -88,78 +87,84 @@ config = quick_config(
 
 pipeline = FairMOPPipeline(config)
 results = pipeline.run()
-
-# results is a dict with keys: "results", "pareto", "export_paths"
-print(f"Pareto-optimal configs: {len(results['pareto'].frontier)}")
 ```
 
-### Option B – YAML config + CLI
+### Option C – Generation only (skip evaluation)
+
+Generates images and stops. Useful when you want to inspect images before
+running the VLM judge, or to separate GPU generation from API evaluation costs.
 
 ```bash
-python -m fairmop run --config experiments/quickstart.yaml
+python -m fairmop run --config experiments/quickstart.yaml --skip-evaluation
 ```
 
-### Option C – Evaluate pre-existing images
+### Option D – Evaluation only on existing images (skip generation)
+
+Assumes images already exist in `<output_dir>/images/`. The folder and file
+naming must follow the FairMOP convention: `{topic}_{params}_seed{N}.png`.
+
+```bash
+python -m fairmop run --config experiments/quickstart.yaml --skip-generation
+```
+
+### Option E – Standalone evaluation on any image folder
+
+Evaluates a directory of images without a YAML config. Suitable for images
+generated outside FairMOP or downloaded from the pre-generated dataset.
 
 ```bash
 python -m fairmop evaluate \
     --images ./my_images/ \
-    --output ./eval_output/ \
+    --prompt "the face of a nurse" \
+    --metrics clip_score entropy kl \
     --vlm-provider openai \
-    --vlm-model gpt-4o-2024-05-13
-```
-
-### Launch the dashboard
-
-```bash
-python -m fairmop dashboard                         # default port 8501
-python -m fairmop dashboard --port 8502 --results ./fairmop_output/
+    --vlm-model gpt-4o-2024-05-13 \
+    --output ./fairmop_output/my_results.json
 ```
 
 ---
 
-## Skipping Generation — Use Pre-Generated Images
+## Pre-Generated Dataset
 
-If you do not want to call a T2I API or run a local model, you can **download the
-pre-generated images** from our HuggingFace dataset and jump straight to evaluation.
+We publish the images from our benchmark on HuggingFace so you can reproduce
+results or run your own evaluation without generating images from scratch.
 
-### Step 1 – Install the download dependency
+**Dataset:** [huggingface.co/datasets/marconb10/FairMOP_images](https://huggingface.co/datasets/marconb10/FairMOP_images)
+
+| Model folder | Images |
+|---|---|
+| `sd` | 1 000 |
+| `sdxl` | 1 000 |
+| `Fluxdev_default` | 1 000 |
+| `Fluxdev_configs` | 5 000 |
+| `DeCoDi` | 5 000 |
+| `Fair Diffusion` | 5 000 |
+
+### Step 1 – Download images
+
+`huggingface_hub` is already included in `requirements.txt`. Images are placed in `fairmop_output/{model}_evaluation/images/` automatically.
 
 ```bash
-pip install -e ".[datasets]"    # adds huggingface_hub
-# or, if you already have requirements installed:
-pip install huggingface_hub
-```
-
-### Step 2 – Download the dataset
-
-Images are automatically placed in `fairmop_output/{model}_evaluation/images/`  
-so they sit alongside generated results with no extra setup.
-
-```bash
-# Only SD images → fairmop_output/sd_evaluation/images/
+# Single model
 python -m fairmop download --model sd
 
-# Only SDXL images → fairmop_output/sdxl_evaluation/images/
-python -m fairmop download --model sdxl
+# List all available model names
+python -m fairmop download --list-models
 
 # Full dataset (all models)
 python -m fairmop download
 
-# See all available model names
-python -m fairmop download --list-models
+# Override output directory
+python -m fairmop download --model sd --output /path/to/dir
 
-# Private repo / specific HF token
+# Explicit HuggingFace token (or set HF_TOKEN env var)
 python -m fairmop download --model sd --token hf_...
-
-# Override root output directory
-python -m fairmop download --model sd --output /some/other/dir
 ```
 
-After the download, the CLI prints ready-to-copy `evaluate` commands with all paths
-already filled in.
+After downloading, the CLI prints a ready-to-copy `evaluate` command with all
+paths pre-filled.
 
-### Step 3 – Evaluate
+### Step 2 – Evaluate
 
 ```bash
 python -m fairmop evaluate \
@@ -171,46 +176,85 @@ python -m fairmop evaluate \
     --output ./fairmop_output/sd_evaluation/sd_evaluation_results.json
 ```
 
-Results (`_results.json`, `_summary.csv`, `_pareto.csv`) are all saved inside
+Results (`_results.json`, `_summary.csv`, `_pareto.csv`) are saved inside
 `fairmop_output/sd_evaluation/`.
 
-### Step 4 – Inspect results in the dashboard
+### Step 3 – Inspect results
 
 ```bash
-python -m fairmop dashboard --results ./fairmop_output/flux_results.json
+python -m fairmop dashboard \
+    --results ./fairmop_output/sd_evaluation/sd_evaluation_results.json
 ```
 
-### Skip-generation via YAML (`--skip-generation`)
+---
 
-If you run a YAML pipeline but already have images in the expected output folder,
-pass `--skip-generation` to avoid re-generating:
+## Exploring Results Without Running Anything
+
+The `examples/fairmop_output_example/` directory contains pre-computed results
+for all six models in our benchmark. Load any of these into the dashboard to
+explore Pareto frontiers without downloading images or calling any API.
 
 ```bash
-python -m fairmop run --config experiments/quickstart.yaml --skip-generation
+python -m fairmop dashboard \
+    --results examples/fairmop_output_example/SD_evaluation/nurse_sd_pareto_test_results.json
+
+python -m fairmop dashboard \
+    --results examples/fairmop_output_example/SDXL_evaluation/nurse_sdxl_pareto_test_results.json
+
+python -m fairmop dashboard \
+    --results examples/fairmop_output_example/Flux_default_evaluation/nurse_fluxdev_default_pareto_test_results.json
+
+python -m fairmop dashboard \
+    --results examples/fairmop_output_example/Flux_evaluation/nurse_fludev_config_pareto_test_results.json
+
+python -m fairmop dashboard \
+    --results examples/fairmop_output_example/DeCoDi_evaluation/nurse_decodi_pareto_test_results.json
+
+python -m fairmop dashboard \
+    --results "examples/fairmop_output_example/Fair Diffusion_evaluation/nurse_fairdiffusion_pareto_test_results.json"
 ```
+
+The dashboard also accepts file uploads via the sidebar.
+
+---
+
+## Dashboard
+
+```bash
+python -m fairmop dashboard                           # port 8501
+python -m fairmop dashboard --results results.json    # pre-load a file
+```
+
+Features:
+
+- Load results via file upload or `--results` flag
+- Select any fairness × utility metric combination for the axes
+- Interactive Pareto frontier overlay
+- Side-by-side multi-model comparison (upload additional JSON files)
+- Export: results as JSON, summary as CSV, chart as standalone HTML
 
 ---
 
 ## YAML Configuration Reference
 
 ```yaml
-# ── Generation ─────────────────────────────────────────────
+# Generation
 prompt: "the face of a nurse"
-model_name: "gpt-image"         # registered generator name
-model_params:                   # kwargs forwarded to the generator
+model_name: "gpt-image"
+model_params:
   openai_model: "gpt-image-1"
   rate_limit_delay: 1.0
 
-hyperparameter_grid:            # Cartesian-product search space
+hyperparameter_grid:           # Cartesian product of all listed values
   quality: ["low", "medium", "high"]
   size: ["1024x1024", "1536x1024"]
 
-num_images_per_config: 50       # images per (grid point × seed)
+num_images_per_config: 50
 seed_start: 1
 
-# ── Evaluation ─────────────────────────────────────────────
-protected_attribute: "gender"   # primary attribute for Pareto
-vlm_provider: "openai"          # "openai" or "gemini"
+# Evaluation
+protected_attribute: "gender"
+vlm_provider: "openai"         # "openai" or "gemini"
 vlm_model: "gpt-4o-2024-05-13"
 metrics:
   - clip_score
@@ -218,55 +262,26 @@ metrics:
   - entropy
   - kl
 
-# ── Infrastructure ─────────────────────────────────────────
-gpu_index: 0                    # null = CPU
+# Infrastructure
+gpu_index: 0                   # null = CPU
 output_dir: "./fairmop_output"
 experiment_name: "nurse_benchmark"
 ```
 
----
+Pre-built configs in `experiments/`:
 
-## Architecture
-
-```
-fairmop/
-├── __init__.py              # Package root (ExperimentConfig, FairMOPPipeline, GeneratorRegistry)
-├── __main__.py              # CLI entry point: run · evaluate · dashboard
-├── config.py                # ExperimentConfig & HyperparameterGrid dataclasses
-├── input_specs.py           # Prompt templates, attribute definitions, quick_config()
-├── pipeline.py              # FairMOPPipeline – orchestrates all 4 modules
-├── utils.py                 # GPU detection, device helpers
-├── generation/
-│   ├── base.py              # BaseGenerator (ABC) – subclass this
-│   ├── registry.py          # @GeneratorRegistry.register() decorator
-│   ├── gpt_image.py         # Built-in GPT-Image & DALL·E 3 backend
-│   └── custom.py            # Integration templates (SD 1.5, SDXL, FLUX)
-├── evaluation/
-│   ├── vlm_judge.py         # VLM-as-a-Judge demographic annotation
-│   ├── fairness.py          # Shannon Entropy · KL Divergence
-│   └── utility.py           # CLIP Score · FID · PRDC Precision
-├── output/
-│   ├── pareto.py            # Pareto frontier (dominance Algorithm 1) · hypervolume
-│   └── export.py            # JSON / CSV export & import
-└── dashboard/
-    └── app.py               # Streamlit interactive dashboard with Plotly charts
-```
-
-### Pipeline Flow
-
-```
-Input Specs → Generation → Evaluation → Output
-    │              │             │           │
-  config     generate imgs   VLM judge   Pareto frontier
-  prompts    per grid point  CLIP/FID    JSON/CSV export
-  grid       save .png       Entropy/KL  Streamlit dashboard
-```
+| File | Description |
+|---|---|
+| `quickstart.yaml` | 3 configs × 5 images — minimal smoke test |
+| `full_benchmark.yaml` | 6 configs × 20 images — quality × size grid |
+| `custom_model.yaml` | Template for locally-hosted models |
+| `test_gpt_image_1.yaml` | Quality × size grid, 5 images per config |
 
 ---
 
 ## Integrating a Custom T2I Model
 
-Subclass `BaseGenerator`, implement `generate()`, and register with the decorator:
+Subclass `BaseGenerator`, implement `generate()`, and register it:
 
 ```python
 import torch
@@ -278,8 +293,6 @@ from fairmop.generation import BaseGenerator, GeneratorRegistry
 
 @GeneratorRegistry.register("stable-diffusion-v1-5")
 class SDv15Generator(BaseGenerator):
-    """Stable Diffusion 1.5 via Hugging Face Diffusers."""
-
     def __init__(self, model_name="", device="cpu", **kwargs):
         super().__init__(model_name, device, **kwargs)
         self.pipe = StableDiffusionPipeline.from_pretrained(
@@ -287,22 +300,12 @@ class SDv15Generator(BaseGenerator):
             torch_dtype=torch.float16 if "cuda" in device else torch.float32,
         ).to(device)
 
-    def generate(
-        self,
-        prompt: str,
-        seed: int,
-        **hyperparams,    # receives grid params (guidance_scale, num_inference_steps, ...)
-    ) -> Image.Image:
+    def generate(self, prompt: str, seed: int, **hyperparams) -> Image.Image:
         generator = torch.Generator(self.device).manual_seed(seed)
-        result = self.pipe(
-            prompt,
-            generator=generator,
-            **hyperparams,
-        )
-        return result.images[0]
+        return self.pipe(prompt, generator=generator, **hyperparams).images[0]
 ```
 
-Then reference it in your YAML:
+Reference the registered name in your YAML:
 
 ```yaml
 model_name: "stable-diffusion-v1-5"
@@ -311,25 +314,35 @@ hyperparameter_grid:
   num_inference_steps: [20, 50]
 ```
 
-See `fairmop/generation/custom.py` for more integration templates (SDXL, FLUX).
+See `fairmop/generation/custom.py` for SDXL and FLUX templates, and
+`examples/custom_model_example.py` for a complete walkthrough.
 
 ---
 
-## Examples
+## Architecture
 
-| Script | Description |
-|---|---|
-| `examples/quickstart.py` | Minimal end-to-end run (3 configs × 5 images) |
-| `examples/gpt_image_example.py` | Full GPT-Image benchmark with quality & size grid |
-| `examples/custom_model_example.py` | Dummy generator showing the plugin pattern |
-| `examples/analyze_results.py` | Load existing JSON results & compute Pareto frontier |
-
-```bash
-# Run an example
-python examples/quickstart.py
-
-# Or use a pre-built YAML experiment
-python -m fairmop run --config experiments/full_benchmark.yaml
+```
+fairmop/
+├── __init__.py          # ExperimentConfig, FairMOPPipeline, GeneratorRegistry
+├── __main__.py          # CLI: run · evaluate · download · dashboard
+├── config.py            # ExperimentConfig & HyperparameterGrid
+├── input_specs.py       # Prompt templates, attribute definitions, quick_config()
+├── pipeline.py          # FairMOPPipeline — orchestrates all four modules
+├── utils.py             # GPU detection, device helpers
+├── generation/
+│   ├── base.py          # BaseGenerator (ABC)
+│   ├── registry.py      # @GeneratorRegistry.register() decorator
+│   ├── gpt_image.py     # GPT-Image as an example 
+│   └── custom.py        # Integration templates (SD, SDXL, FLUX)
+├── evaluation/
+│   ├── vlm_judge.py     # VLM-as-a-Judge demographic annotation
+│   ├── fairness.py      # Shannon Entropy, KL Divergence
+│   └── utility.py       # CLIP Score, FID, PRDC Precision
+├── output/
+│   ├── pareto.py        # Pareto frontier (dominance + hypervolume)
+│   └── export.py        # JSON / CSV export and import
+└── dashboard/
+    └── app.py           # Streamlit dashboard with Plotly charts
 ```
 
 ---
@@ -341,20 +354,18 @@ python -m fairmop run --config experiments/full_benchmark.yaml
 ```python
 from fairmop import ExperimentConfig
 
-# From YAML
 config = ExperimentConfig.from_yaml("experiments/quickstart.yaml")
 
-# Programmatic
 config = ExperimentConfig(
-    prompt="the face of a firefighter",
+    prompt="the face of a nurse",
     model_name="gpt-image",
     num_images_per_config=50,
     protected_attribute="gender",
     metrics=["clip_score", "entropy", "kl"],
 )
 
-config.total_images()  # total across all grid configurations
-config.summary()       # human-readable summary string
+config.total_images()   # total images across all grid configurations
+config.summary()        # human-readable summary string
 config.to_yaml("out.yaml")
 ```
 
@@ -365,24 +376,11 @@ from fairmop import FairMOPPipeline
 
 pipeline = FairMOPPipeline(config)
 
-# Full pipeline (generate → evaluate → output)
-results = pipeline.run()
+results = pipeline.run()                          # full pipeline
+results = pipeline.run(skip_generation=True)      # evaluation only
+results = pipeline.run(skip_evaluation=True)      # generation only
 
-# Evaluate only (images already exist)
-results = pipeline.evaluate_only(image_dir="./images/")
-```
-
-### `GeneratorRegistry`
-
-```python
-from fairmop.generation import GeneratorRegistry
-
-# List available backends
-print(GeneratorRegistry.available())
-# ['gpt-image', 'dall-e-3', ...]
-
-# Instantiate by name
-gen = GeneratorRegistry.create("gpt-image", device="cpu", api_key="sk-...")
+results = pipeline.evaluate_only(images_dir="./images/", metrics=["clip_score", "entropy", "kl"])
 ```
 
 ### Fairness & Utility Metrics
@@ -391,18 +389,17 @@ gen = GeneratorRegistry.create("gpt-image", device="cpu", api_key="sk-...")
 from fairmop.evaluation.fairness import compute_fairness_metrics
 from fairmop.evaluation.utility import compute_clip_score, compute_fid
 
-# Fairness
 metrics = compute_fairness_metrics(
-    annotations=[{"gender": "M"}, {"gender": "F"}, {"gender": "M"}, ...],
-    primary_attribute="gender",
+    annotations=[{"gender": "female"}, {"gender": "male"}, ...],
+    protected_attribute="gender",
 )
-# → {"gender_entropy": 0.97, "gender_kl": 0.003, ...}
+# {"gender_entropy": 0.97, "gender_kl": 0.003, ...}
 
-# CLIP Score
-score = compute_clip_score(images, prompt="the face of a nurse", device="cuda:0")
+scores = compute_clip_score(image_paths, text_prompt="the face of a nurse", device="cuda:0")
+# {"mean": 0.31, "std": 0.02, "scores": [...]}
 
-# FID
-fid = compute_fid(generated_dir="./gen_images/", reference_dir="./ref_images/")
+fid_result = compute_fid(generated_dir="./gen/", reference_dir="./ref/")
+# {"fid": 42.3, "inverse_fid": 0.024}
 ```
 
 ### Pareto Frontier
@@ -413,44 +410,29 @@ from fairmop.output.pareto import find_pareto_frontier, ConfigurationPoint
 points = [
     ConfigurationPoint(config={"quality": "low"},  utility=0.28, fairness=0.95),
     ConfigurationPoint(config={"quality": "high"}, utility=0.34, fairness=0.72),
-    # ...
 ]
 
 result = find_pareto_frontier(points)
-print(result.frontier)        # Pareto-optimal points
-print(result.dominated)       # dominated points
-print(result.hypervolume)     # area indicator
-```
-
----
-
-## Dashboard
-
-The interactive Streamlit dashboard supports:
-
-- **File upload** of JSON result files
-- **Metric selection** (any fairness × utility combination)
-- **Pareto frontier** overlay with Plotly interactive charts
-- **Multi-model comparison** side-by-side
-- **Export** results as JSON, CSV, or standalone HTML charts
-
-```bash
-python -m fairmop dashboard
+print(result.frontier)     # Pareto-optimal points
+print(result.dominated)    # dominated points
+print(result.hypervolume)  # area indicator
 ```
 
 ---
 
 ## VLM-as-a-Judge
 
-FairMOP uses a **fixed annotation prompt** (validated against human annotators) sent to a Vision-Language Model (GPT-4o or Gemini) that classifies each generated image into demographic categories:
+FairMOP uses a fixed annotation prompt (validated against human annotators)
+sent to a Vision-Language Model (GPT-4o or Gemini) that classifies each
+generated image into demographic categories:
 
 | Attribute | Categories |
 |---|---|
-| Gender | Male, Female, Non-binary/Ambiguous |
-| Ethnicity | White, Black, Asian, Latino/Hispanic, Middle-Eastern, Other |
-| Age | Young (18-30), Middle-aged (31-55), Senior (56+), Ambiguous |
+| Gender | Male, Female |
+| Ethnicity | White, Black, Asian, Indian |
+| Age | Young (0-35), Middle-age (35-55), elderly (55+) |
 
-The prompt is fixed to ensure **reproducibility** across experiments — it is not user-customizable by design.
+The prompt is fixed to ensure reproducibility across experiments.
 
 ---
 
@@ -458,28 +440,24 @@ The prompt is fixed to ensure **reproducibility** across experiments — it is n
 
 ```
 FairMOP/
-├── fairmop/                 # Core Python package
-├── examples/                # Runnable Python examples
-├── experiments/             # Pre-built YAML experiment configs
-├── look_here/               # Reference implementation & methodology doc
-│   └── metodologia.md       # Academic methodology description
-├── pyproject.toml           # Package metadata & optional deps
-├── requirements.txt         # Flat dependency list
-├── setup.py                 # Editable install support
+├── fairmop/                    # Core Python package
+├── examples/
+│   ├── quickstart.py           # Minimal end-to-end run
+│   ├── gpt_image_example.py    # Full GPT-Image benchmark
+│   ├── custom_model_example.py # Custom generator walkthrough
+│   ├── analyze_results.py      # Load JSON & compute Pareto
+│   └── fairmop_output_example/ # Pre-computed results (all six models)
+│       ├── SD_evaluation/
+│       ├── SDXL_evaluation/
+│       ├── Flux_evaluation/
+│       ├── Flux_default_evaluation/
+│       ├── DeCoDi_evaluation/
+│       └── Fair Diffusion_evaluation/
+├── experiments/                # Pre-built YAML configs
+├── pyproject.toml
+├── requirements.txt
 └── README.md
 ```
-
----
-
-## Requirements
-
-- Python ≥ 3.9
-- Core: `numpy`, `Pillow`, `tqdm`, `pyyaml`, `python-dotenv`, `requests`
-- CLIP Score: `torch`, `torchvision`, [OpenAI CLIP](https://github.com/openai/CLIP)
-- FID: `torch`, `clean-fid`, `scipy`
-- PRDC: `torch`, `prdc`, `scipy`
-- VLM Judge: `openai` and/or `google-genai`
-- Dashboard: `streamlit`, `plotly`, `pandas`, `kaleido`
 
 ---
 
@@ -491,14 +469,17 @@ MIT
 
 ## Citation
 
-If you use FairMOP in your research, please cite:
-
 ```bibtex
-@software{fairmop2025,
+@article{bochernitsan2025fairmop,
   title   = {FairMOP: Benchmarking Fairness-Utility Trade-offs in
              Text-to-Image Models via Pareto Frontiers},
-  author  = {FairMOP Team},
+  author  = {Bochernitsan, Marco Nemetz and Kupssinsku, Lucas Silveira and
+             Barros, Rodrigo Coelho},
   year    = {2025},
+  note    = {Under Review},
   url     = {https://github.com/Malta-Lab/FairMOP},
 }
 ```
+
+---
+

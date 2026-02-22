@@ -12,6 +12,11 @@ venv/
 .venv/
 env/
 
+# Linting / tooling caches
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+
 # IDE
 .vscode/
 .idea/

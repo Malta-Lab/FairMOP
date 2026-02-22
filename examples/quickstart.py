@@ -19,7 +19,7 @@ This will:
     5. Export results and identify the Pareto frontier
 """
 
-from fairmop import ExperimentConfig, FairMOPPipeline
+from fairmop import FairMOPPipeline
 from fairmop.input_specs import quick_config
 
 

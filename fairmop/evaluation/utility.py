@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import os
 import warnings
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import numpy as np
 from PIL import Image

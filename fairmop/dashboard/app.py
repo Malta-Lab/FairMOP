@@ -17,28 +17,16 @@ import json
 import os
 import sys
 
-import numpy as np
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
 # Add parent to path for standalone execution
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
-from fairmop.output.export import (
-    export_pareto_csv,
-    export_results_csv,
-    load_results_json,
-)
 from fairmop.output.pareto import (
-    ConfigurationPoint,
-    ParetoResult,
     build_pareto_from_results,
-    find_pareto_frontier,
 )
-
-# ── Pre-load path from CLI (python -m fairmop dashboard --results path.json) ─
 
 
 def _preload_path() -> str | None:
@@ -53,8 +41,6 @@ def _preload_path() -> str | None:
 
 
 _PRELOAD_PATH = _preload_path()
-
-# ── Constants ────────────────────────────────────────────────────────────────
 
 COLOR_OPTIONS = [
     ("Orange", "#FF8C00"),
@@ -93,8 +79,6 @@ METRIC_DISPLAY = {
 }
 
 
-# ── Page Config ──────────────────────────────────────────────────────────────
-
 st.set_page_config(
     page_title="FairMOP Dashboard",
     page_icon="⚖️",
@@ -128,16 +112,12 @@ def build_summary_table(results: dict, selected_metrics: list[str]) -> pd.DataFr
     return pd.DataFrame(rows)
 
 
-# ── Main App ─────────────────────────────────────────────────────────────────
-
 st.title("⚖️ FairMOP – Fairness-Utility Trade-off Dashboard")
 st.markdown(
     "Analyze and visualize Pareto frontiers for text-to-image model benchmarking."
 )
 
-# ── Sidebar ──────────────────────────────────────────────────────────────────
-
-st.sidebar.header("📂 Data Input")
+st.sidebar.header("Data Input")
 
 uploaded_main = st.sidebar.file_uploader(
     "Main Results JSON", type=["json"], key="main_json"
@@ -177,11 +157,8 @@ for i in range(num_comparisons):
         }
     )
 
-# ── Load Data ────────────────────────────────────────────────────────────────
-
 results = None
 
-# Auto-load from --results path (passed via CLI)
 if _PRELOAD_PATH and os.path.isfile(_PRELOAD_PATH):
     try:
         with open(_PRELOAD_PATH, "r", encoding="utf-8") as fh:
@@ -189,7 +166,7 @@ if _PRELOAD_PATH and os.path.isfile(_PRELOAD_PATH):
         st.sidebar.success(
             f"Auto-loaded: {os.path.basename(_PRELOAD_PATH)}\n"
             f"Topic: {results.get('topic', '?')} — "
-            f"{results.get('summary', {}).get('total_configs', len(results.get('configurations', {})))} configs"
+            f"{results.get('summary', {}).get('total_configs', len(results.get('configurations', {})))} configs"  # noqa: E501
         )
     except Exception as e:
         st.sidebar.error(f"Error auto-loading {_PRELOAD_PATH}: {e}")
@@ -213,11 +190,9 @@ if results is None:
     )
     st.stop()
 
-# ── Metric Selection ─────────────────────────────────────────────────────────
-
 available_metrics = detect_metrics(results)
 
-st.sidebar.header("📊 Metrics")
+st.sidebar.header("Metrics")
 
 x_metric = st.sidebar.selectbox(
     "X-axis (Utility)",
@@ -230,9 +205,7 @@ y_metric = st.sidebar.selectbox(
     format_func=lambda m: METRIC_DISPLAY.get(m, m),
 )
 
-# ── Summary Table ────────────────────────────────────────────────────────────
-
-st.header("📋 Configuration Summary")
+st.header("Configuration Summary")
 col1, col2, col3 = st.columns(3)
 with col1:
     st.metric("Topic", results.get("topic", "—"))
@@ -244,11 +217,8 @@ with col3:
 df = build_summary_table(results, available_metrics)
 st.dataframe(df, use_container_width=True)
 
-# ── Pareto Chart ─────────────────────────────────────────────────────────────
+st.header("Pareto Frontier Analysis")
 
-st.header("📈 Pareto Frontier Analysis")
-
-# Determine if metrics need inversion
 fid_like = {"fid_score", "fid"}
 utility_invert = x_metric in fid_like
 fairness_invert = y_metric in fid_like
@@ -261,13 +231,11 @@ pareto_result = build_pareto_from_results(
     fairness_invert=fairness_invert,
 )
 
-# Build scatter data
 main_x = [p.utility for p in pareto_result.all_points]
 main_y = [p.fairness for p in pareto_result.all_points]
 main_labels = [p.config_name for p in pareto_result.all_points]
 
-# Chart appearance
-st.sidebar.header("🎨 Appearance")
+st.sidebar.header("Appearance")
 main_color_idx = st.sidebar.selectbox(
     "Main color",
     range(len(COLOR_OPTIONS)),
@@ -298,7 +266,6 @@ pareto_label = st.sidebar.text_input("Pareto Legend Label", "Pareto-Optimal")
 
 fig = go.Figure()
 
-# Main points
 fig.add_trace(
     go.Scatter(
         x=main_x,
@@ -321,7 +288,6 @@ fig.add_trace(
     )
 )
 
-# Pareto frontier
 if pareto_result.pareto_points:
     px_pts = [p.utility for p in pareto_result.pareto_points]
     py_pts = [p.fairness for p in pareto_result.pareto_points]
@@ -350,7 +316,6 @@ if pareto_result.pareto_points:
         )
     )
 
-# Comparison data
 for comp in comparison_uploads:
     if comp["file"] is not None:
         try:
@@ -378,13 +343,12 @@ for comp in comparison_uploads:
                         line=dict(width=1, color="white"),
                     ),
                     text=cl,
-                    name=comp["name"] or f"Comparison",
+                    name=comp["name"] or "Comparison",
                 )
             )
         except Exception as e:
             st.warning(f"Error loading comparison: {e}")
 
-# Layout
 fig.update_layout(
     xaxis_title=METRIC_DISPLAY.get(x_metric, x_metric),
     yaxis_title=METRIC_DISPLAY.get(y_metric, y_metric),
@@ -402,9 +366,7 @@ fig.update_layout(
 
 st.plotly_chart(fig, use_container_width=True)
 
-# ── Pareto Summary ───────────────────────────────────────────────────────────
-
-st.subheader("🏆 Pareto-Optimal Configurations")
+st.subheader("Pareto-Optimal Configurations")
 
 if pareto_result.pareto_points:
     for p in pareto_result.pareto_points:
@@ -416,9 +378,7 @@ if pareto_result.pareto_points:
 else:
     st.info("No Pareto-optimal configurations found.")
 
-# ── Exports ──────────────────────────────────────────────────────────────────
-
-st.header("💾 Export")
+st.header("Export")
 
 col_json, col_csv, col_chart = st.columns(3)
 
@@ -451,8 +411,6 @@ with col_chart:
         )
     except Exception:
         st.info("Chart export unavailable.")
-
-# ── Footer ───────────────────────────────────────────────────────────────────
 
 st.markdown("---")
 st.caption(

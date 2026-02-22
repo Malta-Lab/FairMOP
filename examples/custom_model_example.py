@@ -109,9 +109,9 @@ def main():
     pipeline = FairMOPPipeline(config)
 
     # You can also skip evaluation for generation-only runs:
-    # results = pipeline.run(skip_evaluation=True)
+    # pipeline.run(skip_evaluation=True)
 
-    results = pipeline.run()
+    pipeline.run()
 
     print("\nDone! Check the output directory for results.")
 

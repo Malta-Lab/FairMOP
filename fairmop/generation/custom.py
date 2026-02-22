@@ -37,12 +37,8 @@ Example with Stable Diffusion:
 
 from __future__ import annotations
 
-from typing import Any
 
-from PIL import Image
 
-from fairmop.generation.base import BaseGenerator
-from fairmop.generation.registry import GeneratorRegistry
 
 
 # ── Example: Local Diffusion Model ──────────────────────────────────────────
