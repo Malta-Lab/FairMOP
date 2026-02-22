@@ -213,11 +213,15 @@ class FairMOPPipeline:
                 import torch
 
                 clip_model, _, clip_preprocess = open_clip.create_model_and_transforms(
-                    "ViT-L-14", pretrained="openai", device=device,
+                    "ViT-L-14",
+                    pretrained="openai",
+                    device=device,
                 )
                 print("[Pipeline] CLIP model loaded (ViT-L-14, open_clip)")
             except ImportError:
-                print("[Pipeline] WARNING: open_clip not available, skipping clip_score")  # noqa: E501
+                print(
+                    "[Pipeline] WARNING: open_clip not available, skipping clip_score"
+                )  # noqa: E501
                 needs_clip = False
 
         total_configs = len(config_groups)

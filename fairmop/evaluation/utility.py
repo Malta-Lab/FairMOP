@@ -50,7 +50,9 @@ def compute_clip_score(
         )
 
     model, _, preprocess = open_clip.create_model_and_transforms(
-        clip_model, pretrained="openai", device=device,
+        clip_model,
+        pretrained="openai",
+        device=device,
     )
     tokenizer = open_clip.get_tokenizer(clip_model)
     text_tokens = tokenizer([text_prompt]).to(device)

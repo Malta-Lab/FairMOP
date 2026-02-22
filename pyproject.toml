@@ -110,4 +110,4 @@ fairmop = "fairmop.__main__:main"
 
 [tool.setuptools.packages.find]
 include = ["fairmop*"]
-exclude = ["tests*", "look_here*"]
+exclude = ["tests*"]

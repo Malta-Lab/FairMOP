@@ -24,4 +24,4 @@ metrics: [clip_score, entropy, kl]
 gpu_index: null
 output_dir: "./fairmop_output/gpt_image_grid"
 experiment_name: "gpt_image_grid"
-experiment_name: "nurse_pareto_test"
+experiment_name: "gpt_image_grid"

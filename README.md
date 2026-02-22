@@ -332,8 +332,8 @@ fairmop/
 ├── generation/
 │   ├── base.py          # BaseGenerator (ABC)
 │   ├── registry.py      # @GeneratorRegistry.register() decorator
-│   ├── gpt_image.py     # GPT-Image as an example 
-│   └── custom.py        # Integration templates (SD, SDXL, FLUX)
+│   ├── gpt_image.py     # GPT-Image built-in backend (usage example)
+│   └── custom.py        # Plug in your own model here (SD, SDXL, FLUX templates included)
 ├── evaluation/
 │   ├── vlm_judge.py     # VLM-as-a-Judge demographic annotation
 │   ├── fairness.py      # Shannon Entropy, KL Divergence

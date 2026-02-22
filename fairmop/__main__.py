@@ -244,7 +244,7 @@ def _run_download(
         print(
             "[FairMOP] ERROR: 'huggingface_hub' is not installed.\n"
             "Install it with:  pip install huggingface_hub\n"
-            "or:               pip install -e \".[datasets]\"  (recommended)"
+            'or:               pip install -e ".[datasets]"  (recommended)'
         )
         raise SystemExit(1)
 
@@ -260,10 +260,7 @@ def _run_download(
         print(f"\nAvailable model folders ({len(models)}):")
         for m in models:
             print(f"  {m}")
-        print(
-            "\nUsage example:\n"
-            "  python -m fairmop download --model sd"
-        )
+        print("\nUsage example:\n  python -m fairmop download --model sd")
         return
 
     # ── validate --model against actual repo folders ────────────────────
@@ -335,17 +332,17 @@ def _run_download(
         print("  Ready-to-use evaluate commands")
         print("=" * 60)
         for eval_dir in evaluation_dirs:
-            name = os.path.basename(eval_dir)          # e.g. 'sd_evaluation'
+            name = os.path.basename(eval_dir)  # e.g. 'sd_evaluation'
             images_path = os.path.join(eval_dir, "images")
             results_path = os.path.join(eval_dir, f"{name}_results.json")
             # Quote paths so spaces in folder names don't break the shell command
-            images_q  = f'"{images_path}"'  if " " in images_path  else images_path
+            images_q = f'"{images_path}"' if " " in images_path else images_path
             results_q = f'"{results_path}"' if " " in results_path else results_path
             print(
                 f"\n  # Evaluate '{name}' images\n"
                 f"  python -m fairmop evaluate \\\n"
                 f"      --images {images_q} \\\n"
-                f"      --prompt \"the face of a nurse\" \\\n"
+                f'      --prompt "the face of a nurse" \\\n'
                 f"      --metrics clip_score entropy kl \\\n"
                 f"      --vlm-provider openai \\\n"
                 f"      --output {results_q}"

@@ -15,7 +15,6 @@ requests>=2.28.0
 torch>=2.0.0
 torchvision>=0.15.0
 scipy>=1.10.0
-# CLIP Score (open_clip_torch – compatible with OpenAI ViT-L/14 weights)
 open_clip_torch>=2.24.0
 # FID (Clean-FID)
 clean-fid>=0.1.35

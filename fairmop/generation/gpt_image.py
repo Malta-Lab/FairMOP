@@ -1,7 +1,7 @@
 """
 GPT-Image generator backend.
 
-Uses the OpenAI ``gpt-image-1`` model (or ``dall-e-3``) via the Images API
+Uses the OpenAI ``gpt-image-1`` model via the Images API
 to generate images from text prompts.
 
 Reference: https://platform.openai.com/docs/guides/images
@@ -26,13 +26,13 @@ from fairmop.generation.registry import GeneratorRegistry
 
 @GeneratorRegistry.register("gpt-image")
 class GPTImageGenerator(BaseGenerator):
-    """Generator backend for OpenAI's GPT-Image / DALL-E models.
+"""Generator backend for OpenAI's GPT-Image model.
 
     Parameters:
-        model_name: Model identifier (default: ``"gpt-image"``).
+        model_name: Model identifier (default: ``"gpt-image"``).        
         device: Ignored for API-based generators.
         api_key: OpenAI API key. Falls back to ``OPENAI_API_KEY`` env var.
-        openai_model: Actual OpenAI model name (``"gpt-image-1"`` or ``"dall-e-3"``).
+        openai_model: Actual OpenAI model name (``"gpt-image-1"``).
         size: Image dimensions (e.g., ``"1024x1024"``).
         quality: Image quality (``"low"``, ``"medium"``, ``"high"``).
         rate_limit_delay: Delay in seconds between API calls.
@@ -138,12 +138,3 @@ class GPTImageGenerator(BaseGenerator):
     def teardown(self) -> None:
         """Clean up the client."""
         self._client = None
-
-
-@GeneratorRegistry.register("dall-e-3")
-class DallE3Generator(GPTImageGenerator):
-    """Convenience subclass for DALL-E 3 specifically."""
-
-    def __init__(self, **kwargs: Any):
-        kwargs.setdefault("openai_model", "dall-e-3")
-        super().__init__(**kwargs)
